@@ -11,7 +11,7 @@ config:
   topology.max.spout.pending: 100
   topology.debug: false
 
-  topology.name: "NewsCrawl"
+  topology.name: "PatentCrawl"
 
   # mandatory when using Flux
   topology.kryo.register:
@@ -135,7 +135,7 @@ config:
 
   # change to the location of your choice
   # the directory must already exist
-  warc.dir: "/home/etienne/news-crawl/warc"
+  warc.dir: "/home/etienne/patent-crawl/warc"
 
 
   # Metrics consumers:
