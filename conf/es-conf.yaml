@@ -1,0 +1,50 @@
+# configuration for Elasticsearch resources
+  
+config:
+  # ES indexer bolt
+  es.indexer.addresses: "localhost:9300"
+  es.indexer.index.name: "index"
+  es.indexer.doc.type: "doc"
+  es.indexer.create: false
+  es.indexer.settings:
+    cluster.name: "ES_Cluster"
+
+  # ES metricsConsumer
+  es.metrics.addresses: "localhost:9300"
+  es.metrics.index.name: "metrics"
+  es.metrics.doc.type: "datapoint"
+  es.metrics.settings:
+    cluster.name: "ES_Cluster"
+  
+  # ES spout and persistence bolt
+  es.status.addresses: "localhost:9300"
+  es.status.index.name: "status"
+  es.status.doc.type: "status"
+  #
+  es.status.routing: true
+  # es.status.routing.fieldname: "hostname"
+  es.status.routing.fieldname: "metadata.hostname"
+  es.status.bulkActions: 500
+  es.status.flushInterval: "5s"
+  # min. time (msec.) between 2 successive queries to ES
+  # es.status.min.delay.queries: 60000
+  es.status.concurrentRequests: 1
+  es.status.settings:
+    cluster.name: "ES_Cluster"
+  
+  # AggregationSpout
+  es.status.max.buckets: 50
+  es.status.max.urls.per.bucket: 2
+  # field to group the URLs into buckets
+  es.status.bucket.field: "_routing"
+  # field to sort the URLs within a bucket
+  es.status.bucket.sort.field: "nextFetchDate"
+  # field to sort the buckets
+  es.status.global.sort.field: "nextFetchDate"
+  
+  # Metrics consumers:
+  topology.metrics.consumer.register:
+     - class: "org.apache.storm.metric.LoggingMetricsConsumer"
+       parallelism.hint: 1
+     - class: "com.digitalpebble.stormcrawler.elasticsearch.metrics.MetricsConsumer"
+       parallelism.hint: 1

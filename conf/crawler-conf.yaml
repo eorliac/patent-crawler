@@ -1,0 +1,144 @@
+
+# Custom configuration for StormCrawler
+# This is used to override the default values from crawler-default.xml and provide additional ones 
+# for your custom components.
+# Use this file with the parameter -config when launching your extension of ConfigurableTopology.  
+# This file does not contain all the key values but only the most frequently used ones. See crawler-default.xml for an extensive list.
+
+config: 
+  topology.workers: 1
+  topology.message.timeout.secs: 300
+  topology.max.spout.pending: 100
+  topology.debug: false
+
+  topology.name: "NewsCrawl"
+
+  # mandatory when using Flux
+  topology.kryo.register:
+    - com.digitalpebble.stormcrawler.Metadata
+
+  topology.backpressure.enable: false
+  
+  # set to 0 to deactivate debugging
+  topology.eventlogger.executors: 0
+  
+  #Metrics consumers:
+  topology.metrics.consumer.register:
+     - class: "org.apache.storm.metric.LoggingMetricsConsumer"
+       parallelism.hint: 1
+     - class: "com.digitalpebble.stormcrawler.elasticsearch.metrics.MetricsConsumer"
+       parallelism.hint: 1
+
+  partition.url.mode: "byDomain"
+
+  http.content.limit: 1048576
+  
+  http.store.headers: true
+
+  urlfilters.config.file: "urlfilters.json"
+  parsefilters.config.file: "parsefilters.json"
+  
+  # time bucket to use for the metrics sent by the Fetcher
+  fetcher.metrics.time.bucket.secs: 60
+  
+  fetcher.threads.number: 50
+
+  worker.heap.memory.mb: 4096
+  
+  # delay between successive requests to the same host
+  # (be defensive, a delay of 5 sec. means about 1000 fetches per hour
+  #  which should be enough even for large news sites)
+  fetcher.server.delay: 3.0
+
+  # generous max. crawl delay
+  # (fetch content even if the robots.txt specifies a large host-specific crawl delay:
+  #  waiting 90 sec. between successive fetch would still allow to fetch
+  #  about 1000 pages per day, enough for small news sites)
+  fetcher.max.crawl.delay: 90
+
+  # fetch Scheduler implementation
+  scheduler.class: "com.digitalpebble.stormcrawler.persistence.AdaptiveScheduler"
+  # AdaptiveScheduler properties
+  scheduler.adaptive.setLastModified: true
+  scheduler.adaptive.fetchInterval.min: 90
+  scheduler.adaptive.fetchInterval.max: 40320
+  scheduler.adaptive.fetchInterval.rate.incr: .5
+  scheduler.adaptive.fetchInterval.rate.decr: .2
+
+  # AdaptiveScheduler only handles successful re-fetches (HTTP 200 or 304 not modified),
+  # all others are delegated to DefaultScheduler
+
+  # revisit a page (value in minutes)
+  # - never revisit a news article
+  #   (seeds / RSS feeds are revisited)
+  # - 10 years (-1 would not allow to distinguish the fetch time, required for clean-ups)
+  fetchInterval.default: 5256000
+  
+  # revisit a page with a fetch error after 2 hours (value in minutes)
+  fetchInterval.fetch.error: 120
+  
+  # revisit a page with an error after 3 month (value in minutes)
+  fetchInterval.error: 133920
+
+  # custom interval for feeds and sitemaps
+  # NOTE: must fully specify rules (status + metadata), cf. storm-crawler#420
+
+  # try to re-fetch failed feeds or sitemaps after 2 month
+  fetchInterval.FETCH_ERROR.isFeed=true: 86400
+  fetchInterval.FETCH_ERROR.isSitemapNews=true: 86400
+  fetchInterval.ERROR.isFeed=true: 86400
+  fetchInterval.ERROR.isSitemapNews=true: 86400
+
+  # re-fetch redirected feeds or sitemaps after 2 weeks
+  # (the redirect target may have changed)
+  fetchInterval.REDIRECTION.isFeed=true: 20160
+  fetchInterval.REDIRECTION.isSitemapNews=true: 20160
+
+  # re-fetch feeds 2 times per day by default (adaptive scheduler will set a lower frequency if needed)
+  fetchInterval.FETCHED.isFeed=true: 720
+
+  # news sitemaps may contain up to 1000 URLs, re-fetch daily
+  fetchInterval.FETCHED.isSitemapNews=true: 1440
+
+
+  # auto-detect RSS feeds
+  feed.sniffContent: true
+
+  # auto-detection of news sitemaps
+  sitemap.sniffContent: true
+  sitemap.discovery: true
+
+  status.updater.cache.spec: "maximumSize=250000,expireAfterAccess=4h"
+
+  # lists the metadata to persist to storage
+  # these are not transfered to the outlinks
+  metadata.persist:
+   - _redirTo
+   - fetch.statusCode
+   - error.cause
+   - error.source
+   - isSitemap
+   - isSitemapNews
+   - isFeed
+   - last-modified
+   - signature
+   - signatureChangeDate
+   - fetchInterval
+
+  # HTTP 'User-Agent' request header
+  # NOTE: must set these configuration properties to identify your bot!
+  http.agent.name: "E. Orliac"
+  http.agent.version: "1.0"
+  http.agent.description: "Patents crawler"
+  http.agent.url: "www.epfl.ch"
+  http.agent.email: "etienne.orliac@epfl.ch"
+
+  # change to the location of your choice
+  # the directory must already exist
+  warc.dir: "/home/etienne/news-crawl/warc"
+
+
+  # Metrics consumers:
+  topology.metrics.consumer.register:
+     - class: "org.apache.storm.metric.LoggingMetricsConsumer"
+       parallelism.hint: 1
