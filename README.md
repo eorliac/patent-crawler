@@ -16,6 +16,10 @@ Inject the seeds
 ----------------
 `storm jar target/patent-crawler-1.0.jar com.digitalpebble.stormcrawler.elasticsearch.ESSeedInjector ~/patent-crawler/seeds/ feeds.txt -conf conf/es-conf.yaml -conf conf/crawler-conf.yaml -local`
 
+Check the injection:
+[http://localhost:9200/status/_search?pretty]
+
+
 Run the topology
 ----------------
 `storm jar target/patent-crawler-1.0.jar ch.epfl.scitas.patentcrawler.CrawlTopology -conf conf/es-conf.yaml -conf conf/crawler-conf.yaml -local`
