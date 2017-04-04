@@ -3,13 +3,18 @@ A web crawler based on [Storm-Crawler](http://stormcrawler.net) and [News-Crawl]
 
 Prerequisites
 ------------
-
 * Install Apache Storm 1.0.3
 * Install ElasticSearch 2.4.1
 * Install Kibana 4.6.1
 * Clone and compile [https://github.com/DigitalPebble/storm-crawler] with `mvn clean install`
 * Start ES and Storm
-* Build ES indices with : `curl -L "https://git.io/vaGkv" | bash`
+
+
+Build ES indices
+----------------
+This has to be done everytime the topology is restarted!!
+
+`curl -L "https://git.io/vaGkv" | bash` or `~/conf/ES_create_indices.sh`
 
 
 Inject the seeds

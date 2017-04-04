@@ -30,7 +30,7 @@ import ch.epfl.scitas.patentcrawler.FileTimeSizeRotationPolicy.Units;
 
 import com.digitalpebble.stormcrawler.bolt.FeedParserBolt;
 import com.digitalpebble.stormcrawler.bolt.FetcherBolt;
-import com.digitalpebble.stormcrawler.bolt.URLPartitionerBolt;
+/**import com.digitalpebble.stormcrawler.bolt.URLPartitionerBolt;**/
 import com.digitalpebble.stormcrawler.elasticsearch.persistence.AggregationSpout;
 import com.digitalpebble.stormcrawler.elasticsearch.persistence.StatusUpdaterBolt;
 import com.digitalpebble.stormcrawler.indexing.DummyIndexer;
@@ -40,6 +40,7 @@ import com.digitalpebble.stormcrawler.warc.WARCFileNameFormat;
 import com.digitalpebble.stormcrawler.warc.WARCHdfsBolt;
 import com.digitalpebble.stormcrawler.ConfigurableTopology;
 import com.digitalpebble.stormcrawler.Constants;
+import com.digitalpebble.stormcrawler.bolt.SiteMapParserBolt;
 
 /**
  * Dummy topology to play with the spouts and bolts on ElasticSearch
@@ -71,7 +72,7 @@ public class CrawlTopology extends ConfigurableTopology {
         builder.setBolt("sitemap", new PatentSiteMapParserBolt(), numWorkers)
                 .setNumTasks(2).localOrShuffleGrouping("fetch");
 
-        builder.setBolt("feed", new FeedParserBolt(), numWorkers).setNumTasks(4)
+        builder.setBolt("feed", new PatentParserBolt(), numWorkers).setNumTasks(4)
                 .localOrShuffleGrouping("sitemap");
 
         // don't need to parse the pages but need to update their status
@@ -87,9 +88,9 @@ public class CrawlTopology extends ConfigurableTopology {
         builder.setBolt("status", new StatusUpdaterBolt(), numWorkers)
                 .localOrShuffleGrouping("fetch", Constants.StatusStreamName)
                 .localOrShuffleGrouping("sitemap", Constants.StatusStreamName)
-                .localOrShuffleGrouping("feed", Constants.StatusStreamName)
-                .localOrShuffleGrouping("ssb", Constants.StatusStreamName)
-                .setNumTasks(numShards);
+	        .localOrShuffleGrouping("feed", Constants.StatusStreamName)
+	        .localOrShuffleGrouping("ssb", Constants.StatusStreamName)
+	        .setNumTasks(numShards);
 
         return submit(conf, builder);
     }
@@ -99,6 +100,8 @@ public class CrawlTopology extends ConfigurableTopology {
         String warcFilePath = ConfUtils.getString(getConf(), "warc.dir",
                 "/data/warc");
 
+	System.out.println("<<<<<<<<<<<<<<<<<<<<< <<<<<<<<<< <<<<<<<<  getWarcBolt: " + warcFilePath);
+	
         WARCFileNameFormat fileNameFormat = new WARCFileNameFormat();
         fileNameFormat.withPath(warcFilePath);
         fileNameFormat.withPrefix(filePrefix);

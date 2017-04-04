@@ -1,4 +1,21 @@
-/**package com.digitalpebble.stormcrawler;**/
+/**
+ * Licensed to DigitalPebble Ltd under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * DigitalPebble licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**package com.digitalpebble.stormcrawler.bolt;**/
 package ch.epfl.scitas.patentcrawler;
 
 import static com.digitalpebble.stormcrawler.Constants.StatusStreamName;
@@ -6,6 +23,7 @@ import static com.digitalpebble.stormcrawler.Constants.StatusStreamName;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -16,14 +34,14 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 import org.apache.storm.task.OutputCollector;
 import org.apache.storm.task.TopologyContext;
+import org.apache.storm.topology.OutputFieldsDeclarer;
+import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
-/**import org.commoncrawl.news.bootstrap.ContentDetector;**/
 import org.slf4j.LoggerFactory;
 
 import com.digitalpebble.stormcrawler.Constants;
 import com.digitalpebble.stormcrawler.Metadata;
-import com.digitalpebble.stormcrawler.bolt.SiteMapParserBolt;
 import com.digitalpebble.stormcrawler.parse.Outlink;
 import com.digitalpebble.stormcrawler.parse.ParseData;
 import com.digitalpebble.stormcrawler.parse.ParseFilter;
@@ -32,6 +50,9 @@ import com.digitalpebble.stormcrawler.parse.ParseResult;
 import com.digitalpebble.stormcrawler.persistence.Status;
 import com.digitalpebble.stormcrawler.protocol.HttpHeaders;
 import com.digitalpebble.stormcrawler.util.ConfUtils;
+import com.digitalpebble.stormcrawler.bolt.StatusEmitterBolt;
+import com.digitalpebble.stormcrawler.bolt.SiteMapParserBolt;
+import com.google.common.primitives.Bytes;
 
 import crawlercommons.sitemaps.AbstractSiteMap;
 import crawlercommons.sitemaps.SiteMap;
@@ -40,35 +61,19 @@ import crawlercommons.sitemaps.SiteMapURL;
 import crawlercommons.sitemaps.SiteMapURL.ChangeFrequency;
 import crawlercommons.sitemaps.UnknownFormatException;
 
-
 /**
- * ParserBolt for <link href=
- * "https://support.google.com/news/publisher/answer/74288?hl=en">news
- * sitemaps</a>.
+ * Extracts URLs from sitemap files. The parsing is triggered by the presence of
+ * 'isSitemap=true' in the metadata. Any tuple which does not have this
+ * key/value in the metadata is simply passed on to the default stream, whereas
+ * any URLs extracted from the sitemaps is sent to the 'status' field.
  */
 @SuppressWarnings("serial")
-public class PatentSiteMapParserBolt extends SiteMapParserBolt {
-    // TODO:
-    //    this is a modified copy of c.d.s.bolt.SiteMapParserBolt
-    //    - make parent class extensible and overridable
-    //    modifications:
-    //    - detect and process only Google news sitemaps
-    //    - pass "isSitemapNews" to status metadata
+public class PatentSiteMapParserBolt extends StatusEmitterBolt {
 
-    public static final String isSitemapNewsKey = "isSitemapNews";
+    public static final String isSitemapKey = "isSitemap";
 
     private static final org.slf4j.Logger LOG = LoggerFactory
             .getLogger(SiteMapParserBolt.class);
-
-    public static String[][] contentClues = {
-            // match 0: a news sitemap
-            { "http://www.google.com/schemas/sitemap-news/0.9",
-                    "http://www.sitemaps.org/schemas/sitemap/0.9" },
-            // match 1: a sitemap, but not a news sitemap
-            { "http://www.sitemaps.org/schemas/sitemap/0.9" } };
-    protected static final int maxOffsetContentGuess = 1024;
-    private static ContentDetector contentDetector = new ContentDetector(
-            PatentSiteMapParserBolt.contentClues, maxOffsetContentGuess);
 
     private boolean strictMode = false;
     private boolean sniffWhenNoSMKey = false;
@@ -76,52 +81,49 @@ public class PatentSiteMapParserBolt extends SiteMapParserBolt {
     private ParseFilter parseFilters;
     private int filterHoursSinceModified = -1;
 
+    private int maxOffsetGuess = 300;
+
     @Override
     public void execute(Tuple tuple) {
+	
+	System.out.println("PatentSiteMapParserBolt execute <><><><><><><><><><><><><><><><>");
+	
         Metadata metadata = (Metadata) tuple.getValueByField("metadata");
 
         // TODO check that we have the right number of fields?
         byte[] content = tuple.getBinaryByField("content");
         String url = tuple.getStringByField("url");
 
-        boolean isSitemap = Boolean.valueOf(
-                metadata.getFirstValue(SiteMapParserBolt.isSitemapKey));
-        boolean isNewsSitemap = Boolean
-                .valueOf(metadata.getFirstValue(isSitemapNewsKey));
+        String isSitemap = metadata.getFirstValue(isSitemapKey);
         // doesn't have the metadata expected
-        if (!isNewsSitemap || !isSitemap) {
+        if (!Boolean.valueOf(isSitemap)) {
+            int found = -1;
+
             if (sniffWhenNoSMKey) {
                 // try based on the first bytes?
                 // works for XML and non-compressed documents
-                int match = contentDetector.getFirstMatch(content);
-                if (match >= 0) {
-                    // a sitemap, not necessarily a news sitemap
-                    isSitemap = true;
-                    metadata.setValue(SiteMapParserBolt.isSitemapKey, "true");
-                    if (match == 0) {
-                        isNewsSitemap = true;
-                        LOG.info("{} detected as news sitemap based on content",
-                                url);
-                        metadata.setValue(isSitemapNewsKey, "true");
-                    }
+                byte[] clue = "http://www.sitemaps.org/schemas/sitemap/0.9"
+                        .getBytes();
+                byte[] beginning = content;
+                if (content.length > maxOffsetGuess && maxOffsetGuess > 0) {
+                    beginning = Arrays.copyOfRange(content, 0, maxOffsetGuess);
+                }
+                found = Bytes.indexOf(beginning, clue);
+                if (found != -1) {
+                    LOG.info("{} detected as sitemap based on content", url);
                 }
             }
 
-        }
-
-        if (!isNewsSitemap) {
-            if (isSitemap) {
-                // a sitemap but not a news sitemap
-                collector.emit(Constants.StatusStreamName, tuple,
-                        new Values(url, metadata, Status.FETCHED));
-            } else {
-                // not a sitemap, just pass it on
-                collector.emit(tuple, tuple.getValues());
+            // not a sitemap file
+            if (found == -1) {
+                // just pass it on
+                this.collector.emit(tuple, tuple.getValues());
+                this.collector.ack(tuple);
+                return;
             }
-            collector.ack(tuple);
-            return;
         }
 
+        // it is a sitemap
         String ct = metadata.getFirstValue(HttpHeaders.CONTENT_TYPE);
 
         List<Outlink> outlinks;
@@ -141,6 +143,9 @@ public class PatentSiteMapParserBolt extends SiteMapParserBolt {
             return;
         }
 
+
+	System.out.println("<><><><><><><><><><><><><><><><>");
+	
         // apply the parse filters if any to the current document
         try {
             ParseResult parse = new ParseResult();
@@ -222,7 +227,7 @@ public class PatentSiteMapParserBolt extends SiteMapParserBolt {
                 }
 
                 Outlink ol = filterOutlink(sURL, target, parentMetadata,
-                        isSitemapKey, "true", isSitemapNewsKey, "true");
+                        isSitemapKey, "true");
                 if (ol == null) {
                     continue;
                 }
@@ -263,7 +268,7 @@ public class PatentSiteMapParserBolt extends SiteMapParserBolt {
                 }
 
                 Outlink ol = filterOutlink(sURL, target, parentMetadata,
-                        isSitemapKey, "false", isSitemapNewsKey, "false");
+                        isSitemapKey, "false");
                 if (ol == null) {
                     continue;
                 }
@@ -285,6 +290,14 @@ public class PatentSiteMapParserBolt extends SiteMapParserBolt {
         filterHoursSinceModified = ConfUtils.getInt(stormConf,
                 "sitemap.filter.hours.since.modified", -1);
         parseFilters = ParseFilters.fromConf(stormConf);
+        maxOffsetGuess = ConfUtils.getInt(stormConf, "sitemap.offset.guess",
+                300);
+    }
+
+    @Override
+    public void declareOutputFields(OutputFieldsDeclarer declarer) {
+        super.declareOutputFields(declarer);
+        declarer.declare(new Fields("url", "content", "metadata"));
     }
 
 }

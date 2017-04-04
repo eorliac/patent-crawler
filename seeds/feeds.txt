@@ -2,7 +2,3 @@ https://www.tivo.com/legal/patents	isFeed=true
 http://www.merck.com/product/patent/home.html	isFeed=true
 
 # disallowed by robots
-# http://www.lemonde.fr/
-# http://www.lastampa.it
-# http://newsrss.bbc.co.uk/rss/newsonline_uk_edition/help/rss/rss.xml	isFeed=true
-
