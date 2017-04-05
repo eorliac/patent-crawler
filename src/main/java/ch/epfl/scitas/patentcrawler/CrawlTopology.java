@@ -76,8 +76,10 @@ public class CrawlTopology extends ConfigurableTopology {
                 .localOrShuffleGrouping("sitemap");
 
         // don't need to parse the pages but need to update their status
+	// EO: DummyIndexer update status as "FETCHED" for tuples that went through
+	//     all the previous bolts.
         builder.setBolt("ssb", new DummyIndexer(), numWorkers)
-                .localOrShuffleGrouping("feed");
+	        .localOrShuffleGrouping("feed");
 
         WARCHdfsBolt warcbolt = getWarcBolt("CC-PATENTS");
 

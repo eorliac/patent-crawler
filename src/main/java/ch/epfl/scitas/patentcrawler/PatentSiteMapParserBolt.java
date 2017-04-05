@@ -176,9 +176,11 @@ public class PatentSiteMapParserBolt extends StatusEmitterBolt {
 
         // marking the main URL as successfully fetched
         // regardless of whether we got a parse exception or not
+	System.out.println("-------------------------------------------- url marked as FETCHED:" + url);
         collector.emit(Constants.StatusStreamName, tuple, new Values(url,
                 metadata, Status.FETCHED));
         collector.ack(tuple);
+	System.out.println("--------------------------------------------");
     }
 
     private List<Outlink> parseSiteMap(String url, byte[] content,

@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -341,19 +343,30 @@ public class PatentParserBolt extends StatusEmitterBolt {
 
         // emit each document/subdocument in the ParseResult object
         // there should be at least one ParseData item for the "parent" URL
-
+	
         for (Map.Entry<String, ParseData> doc : parse) {
             ParseData parseDoc = doc.getValue();
-            collector.emit(
-                    tuple,
-                    new Values(doc.getKey(), parseDoc.getContent(), parseDoc
-                            .getMetadata(), parseDoc.getText()));
-        }
+	    //if (Pattern.matches("(?i)U\\.{0,1}\\s*S\\.{0,1}\\s*Patent", parseDoc.getText())) {
+	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat");
+	    Matcher matcher = pattern.matcher(parseDoc.getText());
+	    if (matcher.find()) {
+		System.out.println("===========================================================================");
+		System.out.println("Found U.S.Patent mention in:\n " + parseDoc.getText());
+		String val = matcher.group();
+		System.out.println("MATCH: " + val);
+		System.out.println("Will WARC page content. Metadata is:\n" + parseDoc.getMetadata());
+		System.out.println("===========================================================================");
+		    
+		collector.emit(tuple,
+			       new Values(doc.getKey(), parseDoc.getContent(), parseDoc
+					  .getMetadata(), parseDoc.getText()));
+	    }
+	}
 
-        collector.ack(tuple);
-        eventCounter.scope("tuple_success").incr();
+	collector.ack(tuple);
+	eventCounter.scope("tuple_success").incr();
     }
-
+    
     private void handleException(String url, Throwable e, Metadata metadata,
             Tuple tuple, String errorSource, String errorMessage) {
         LOG.error(errorMessage);

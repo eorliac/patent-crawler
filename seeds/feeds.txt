@@ -1,4 +1,7 @@
 https://www.tivo.com/legal/patents	isFeed=true
 http://www.merck.com/product/patent/home.html	isFeed=true
+https://www.uspto.gov/				isFeed=true
+https://www.shire.com/				isFeed=true
+
 
 # disallowed by robots
