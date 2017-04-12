@@ -22,13 +22,6 @@ config:
   # set to 0 to deactivate debugging
   topology.eventlogger.executors: 0
   
-  #Metrics consumers:
-  topology.metrics.consumer.register:
-     - class: "org.apache.storm.metric.LoggingMetricsConsumer"
-       parallelism.hint: 1
-     - class: "com.digitalpebble.stormcrawler.elasticsearch.metrics.MetricsConsumer"
-       parallelism.hint: 1
-
   partition.url.mode: "byDomain"
 
   http.content.limit: 1048576
@@ -84,21 +77,21 @@ config:
   # NOTE: must fully specify rules (status + metadata), cf. storm-crawler#420
 
   # try to re-fetch failed feeds or sitemaps after 2 month
-  fetchInterval.FETCH_ERROR.isFeed=true: 86400
-  fetchInterval.FETCH_ERROR.isSitemapNews=true: 86400
-  fetchInterval.ERROR.isFeed=true: 86400
-  fetchInterval.ERROR.isSitemapNews=true: 86400
+  #fetchInterval.FETCH_ERROR.isFeed=true: 86400
+  #fetchInterval.FETCH_ERROR.isSitemapNews=true: 86400
+  #fetchInterval.ERROR.isFeed=true: 86400
+  #fetchInterval.ERROR.isSitemapNews=true: 86400
 
   # re-fetch redirected feeds or sitemaps after 2 weeks
   # (the redirect target may have changed)
-  fetchInterval.REDIRECTION.isFeed=true: 20160
-  fetchInterval.REDIRECTION.isSitemapNews=true: 20160
+  #fetchInterval.REDIRECTION.isFeed=true: 20160
+  #fetchInterval.REDIRECTION.isSitemapNews=true: 20160
 
   # re-fetch feeds 2 times per day by default (adaptive scheduler will set a lower frequency if needed)
-  fetchInterval.FETCHED.isFeed=true: 720
+  #fetchInterval.FETCHED.isFeed=true: 720
 
   # news sitemaps may contain up to 1000 URLs, re-fetch daily
-  fetchInterval.FETCHED.isSitemapNews=true: 1440
+  #fetchInterval.FETCHED.isSitemapNews=true: 1440
 
 
   # auto-detect RSS feeds
@@ -118,8 +111,6 @@ config:
    - error.cause
    - error.source
    - isSitemap
-   - isSitemapNews
-   - isFeed
    - last-modified
    - signature
    - signatureChangeDate
@@ -141,4 +132,6 @@ config:
   # Metrics consumers:
   topology.metrics.consumer.register:
      - class: "org.apache.storm.metric.LoggingMetricsConsumer"
+       parallelism.hint: 1
+     - class: "com.digitalpebble.stormcrawler.elasticsearch.metrics.MetricsConsumer"
        parallelism.hint: 1

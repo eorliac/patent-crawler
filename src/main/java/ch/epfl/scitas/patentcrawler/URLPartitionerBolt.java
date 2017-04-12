@@ -63,8 +63,6 @@ public class URLPartitionerBolt extends BaseRichBolt {
     @Override
     public void execute(Tuple tuple) {
         String url = tuple.getStringByField("url");
-
-	System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> url:" + url);
 	
         Metadata metadata = null;
 

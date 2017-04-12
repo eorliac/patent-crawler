@@ -42,7 +42,7 @@ curl -s -XPOST localhost:9200/status -d '
 				},
 				"status": {
 					"type": "string",
-					"index": "not_analyzed"
+					"index": "analyzed"
 				},
 				"url": {
 					"type": "string",

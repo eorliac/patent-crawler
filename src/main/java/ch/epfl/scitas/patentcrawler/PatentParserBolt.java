@@ -297,10 +297,9 @@ public class PatentParserBolt extends StatusEmitterBolt {
                 }
 
                 // Mark URL as redirected
-                collector
-                        .emit(com.digitalpebble.stormcrawler.Constants.StatusStreamName,
-                                tuple, new Values(url, metadata,
-                                        Status.REDIRECTION));
+                collector.emit(com.digitalpebble.stormcrawler.Constants.StatusStreamName,
+			       tuple,
+			       new Values(url, metadata, Status.REDIRECTION));
                 collector.ack(tuple);
                 eventCounter.scope("tuple_success").incr();
                 return;
@@ -332,23 +331,34 @@ public class PatentParserBolt extends StatusEmitterBolt {
         }
 
         if (emitOutlinks) {
+	    System.out.println("$$$$$ EmitOutlinks...");
             for (Outlink outlink : parse.getOutlinks()) {
+		System.out.println("$$$$$ ------- outlink: " + outlink);
                 collector.emit(
                         StatusStreamName,
                         tuple,
                         new Values(outlink.getTargetURL(), outlink
                                 .getMetadata(), Status.DISCOVERED));
             }
-        }
+	    System.out.println("$$$$$ EmitOutlinks...complete");
+        } else {
+	    System.out.println("$$$$$ NO Outlinks!");
+	}
 
+	
+	System.out.println("$$-$$ NOW Parsing documents!");
+	
+
+	
         // emit each document/subdocument in the ParseResult object
         // there should be at least one ParseData item for the "parent" URL
 	
         for (Map.Entry<String, ParseData> doc : parse) {
             ParseData parseDoc = doc.getValue();
-	    //if (Pattern.matches("(?i)U\\.{0,1}\\s*S\\.{0,1}\\s*Patent", parseDoc.getText())) {
-	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat");
+
+	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat(\\.|atent)");
 	    Matcher matcher = pattern.matcher(parseDoc.getText());
+	    
 	    if (matcher.find()) {
 		System.out.println("===========================================================================");
 		System.out.println("Found U.S.Patent mention in:\n " + parseDoc.getText());
@@ -363,6 +373,12 @@ public class PatentParserBolt extends StatusEmitterBolt {
 	    }
 	}
 
+	// EO: Indicate URL as PARSED
+	
+	collector.emit(com.digitalpebble.stormcrawler.Constants.StatusStreamName,
+		       tuple,
+		       new Values(url, metadata, Status.FETCHED));
+	
 	collector.ack(tuple);
 	eventCounter.scope("tuple_success").incr();
     }

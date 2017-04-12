@@ -27,12 +27,13 @@ import org.apache.storm.topology.TopologyBuilder;
 import org.apache.storm.tuple.Fields;
 
 import ch.epfl.scitas.patentcrawler.FileTimeSizeRotationPolicy.Units;
-
+import ch.epfl.scitas.patentcrawler.StatusUpdaterBolt;
+    
 import com.digitalpebble.stormcrawler.bolt.FeedParserBolt;
 import com.digitalpebble.stormcrawler.bolt.FetcherBolt;
 /**import com.digitalpebble.stormcrawler.bolt.URLPartitionerBolt;**/
-import com.digitalpebble.stormcrawler.elasticsearch.persistence.AggregationSpout;
-import com.digitalpebble.stormcrawler.elasticsearch.persistence.StatusUpdaterBolt;
+/**import com.digitalpebble.stormcrawler.elasticsearch.persistence.AggregationSpout;**/
+/**import com.digitalpebble.stormcrawler.elasticsearch.persistence.StatusUpdaterBolt**/;
 import com.digitalpebble.stormcrawler.indexing.DummyIndexer;
 import com.digitalpebble.stormcrawler.protocol.AbstractHttpProtocol;
 import com.digitalpebble.stormcrawler.util.ConfUtils;
@@ -88,10 +89,10 @@ public class CrawlTopology extends ConfigurableTopology {
         builder.setBolt("warc", warcbolt).localOrShuffleGrouping("feed");
 
         builder.setBolt("status", new StatusUpdaterBolt(), numWorkers)
-                .localOrShuffleGrouping("fetch", Constants.StatusStreamName)
+                .localOrShuffleGrouping("fetch",   Constants.StatusStreamName)
                 .localOrShuffleGrouping("sitemap", Constants.StatusStreamName)
-	        .localOrShuffleGrouping("feed", Constants.StatusStreamName)
-	        .localOrShuffleGrouping("ssb", Constants.StatusStreamName)
+	        .localOrShuffleGrouping("feed",    Constants.StatusStreamName)
+	        .localOrShuffleGrouping("ssb",     Constants.StatusStreamName)
 	        .setNumTasks(numShards);
 
         return submit(conf, builder);

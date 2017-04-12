@@ -86,8 +86,6 @@ public class PatentSiteMapParserBolt extends StatusEmitterBolt {
     @Override
     public void execute(Tuple tuple) {
 	
-	System.out.println("PatentSiteMapParserBolt execute <><><><><><><><><><><><><><><><>");
-	
         Metadata metadata = (Metadata) tuple.getValueByField("metadata");
 
         // TODO check that we have the right number of fields?
@@ -144,7 +142,7 @@ public class PatentSiteMapParserBolt extends StatusEmitterBolt {
         }
 
 
-	System.out.println("<><><><><><><><><><><><><><><><>");
+	//System.out.println("<><><><><><><><><><><><><><><><>");
 	
         // apply the parse filters if any to the current document
         try {
@@ -176,11 +174,13 @@ public class PatentSiteMapParserBolt extends StatusEmitterBolt {
 
         // marking the main URL as successfully fetched
         // regardless of whether we got a parse exception or not
+	/** EO: Keep seed url in for parsing
 	System.out.println("-------------------------------------------- url marked as FETCHED:" + url);
         collector.emit(Constants.StatusStreamName, tuple, new Values(url,
                 metadata, Status.FETCHED));
         collector.ack(tuple);
 	System.out.println("--------------------------------------------");
+	**/
     }
 
     private List<Outlink> parseSiteMap(String url, byte[] content,
