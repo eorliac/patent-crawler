@@ -1,0 +1,7 @@
+#https://www.tivo.com/legal/patents
+http://www.merck.com/product/patent/home.html
+#https://www.uspto.gov/
+#https://www.shire.com/
+
+
+# disallowed by robots

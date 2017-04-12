@@ -28,3 +28,9 @@ Run the topology
 ----------------
 `storm jar target/patent-crawler-1.0.jar ch.epfl.scitas.patentcrawler.CrawlTopology -conf conf/es-conf.yaml -conf conf/crawler-conf.yaml -local`
 
+
+Build & run utility
+-------------------
+Alternatively, you can run the following script that does all the previous steps:
+`./build_and_run_patent_crawler.sh`
+
