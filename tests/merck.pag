@@ -1,0 +1,11 @@
+
+grep "U\\.*S\\.*\\sPat[(\\.)|(ent)]" tests/merck.pag
+
+U.S. Pat. No              1
+U. S. Patent              2
+U.S. Patent               3
+US Pat.                   4
+US Patent                 5
+u.s. patenT               6
+u. S. patent              7
+u.         S.patent       8/8
