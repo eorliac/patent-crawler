@@ -129,7 +129,7 @@ curl -s -XPOST localhost:9200/index -d '
 	"mappings": {
 		"doc": {
 			"_source": {
-				"enabled": false
+				"enabled": true
 			},
 			"_all": {
 				"enabled": false

@@ -171,10 +171,11 @@ public class PatentSiteMapParserBolt extends StatusEmitterBolt {
                     Status.DISCOVERED);
             collector.emit(Constants.StatusStreamName, tuple, v);
         }
-
-        // marking the main URL as successfully fetched
+	
+	// EO: Keep seed url in for parsing!
+        /**
+	// marking the main URL as successfully fetched
         // regardless of whether we got a parse exception or not
-	/** EO: Keep seed url in for parsing
 	System.out.println("-------------------------------------------- url marked as FETCHED:" + url);
         collector.emit(Constants.StatusStreamName, tuple, new Values(url,
                 metadata, Status.FETCHED));

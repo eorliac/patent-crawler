@@ -70,9 +70,9 @@ public class StatusUpdaterBolt extends AbstractStatusUpdaterBolt implements
 
     private static final String ESBoltType = "status";
 
-    private static final String ESStatusIndexNameParamName = "es.status.index.name";
-    private static final String ESStatusDocTypeParamName = "es.status.doc.type";
-    private static final String ESStatusRoutingParamName = "es.status.routing";
+    private static final String ESStatusIndexNameParamName    = "es.status.index.name";
+    private static final String ESStatusDocTypeParamName      = "es.status.doc.type";
+    private static final String ESStatusRoutingParamName      = "es.status.routing";
     private static final String ESStatusRoutingFieldParamName = "es.status.routing.fieldname";
 
     private boolean routingFieldNameInMetadata = false;

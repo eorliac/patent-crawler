@@ -10,19 +10,13 @@ config:
   topology.message.timeout.secs: 300
   topology.max.spout.pending: 100
   topology.debug: false
-
   topology.name: "PatentCrawl"
-
-  # mandatory when using Flux
-  topology.kryo.register:
-    - com.digitalpebble.stormcrawler.Metadata
-
   topology.backpressure.enable: false
   
   # set to 0 to deactivate debugging
   topology.eventlogger.executors: 0
   
-  partition.url.mode: "byDomain"
+  partition.url.mode: "byHost"
 
   http.content.limit: 1048576
   
@@ -32,9 +26,9 @@ config:
   parsefilters.config.file: "parsefilters.json"
   
   # time bucket to use for the metrics sent by the Fetcher
-  fetcher.metrics.time.bucket.secs: 60
+  fetcher.metrics.time.bucket.secs: 30
   
-  fetcher.threads.number: 50
+  fetcher.threads.number: 100
 
   worker.heap.memory.mb: 4096
   

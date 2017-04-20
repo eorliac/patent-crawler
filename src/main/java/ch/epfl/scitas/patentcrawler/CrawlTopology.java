@@ -34,7 +34,10 @@ import com.digitalpebble.stormcrawler.bolt.FetcherBolt;
 /**import com.digitalpebble.stormcrawler.bolt.URLPartitionerBolt;**/
 /**import com.digitalpebble.stormcrawler.elasticsearch.persistence.AggregationSpout;**/
 /**import com.digitalpebble.stormcrawler.elasticsearch.persistence.StatusUpdaterBolt**/;
-import com.digitalpebble.stormcrawler.indexing.DummyIndexer;
+//import com.digitalpebble.stormcrawler.indexing.DummyIndexer;
+//import com.digitalpebble.stormcrawler.elasticsearch.bolt.IndexerBolt;
+import ch.epfl.scitas.patentcrawler.IndexerBolt;
+
 import com.digitalpebble.stormcrawler.protocol.AbstractHttpProtocol;
 import com.digitalpebble.stormcrawler.util.ConfUtils;
 import com.digitalpebble.stormcrawler.warc.WARCFileNameFormat;
@@ -43,9 +46,7 @@ import com.digitalpebble.stormcrawler.ConfigurableTopology;
 import com.digitalpebble.stormcrawler.Constants;
 import com.digitalpebble.stormcrawler.bolt.SiteMapParserBolt;
 
-/**
- * Dummy topology to play with the spouts and bolts on ElasticSearch
- */
+
 public class CrawlTopology extends ConfigurableTopology {
 
     public static void main(String[] args) throws Exception {
@@ -73,30 +74,32 @@ public class CrawlTopology extends ConfigurableTopology {
         builder.setBolt("sitemap", new PatentSiteMapParserBolt(), numWorkers)
                 .setNumTasks(2).localOrShuffleGrouping("fetch");
 
-        builder.setBolt("feed", new PatentParserBolt(), numWorkers).setNumTasks(4)
+        builder.setBolt("parse", new PatentParserBolt(), numWorkers).setNumTasks(4)
                 .localOrShuffleGrouping("sitemap");
 
         // don't need to parse the pages but need to update their status
 	// EO: DummyIndexer update status as "FETCHED" for tuples that went through
 	//     all the previous bolts.
-        builder.setBolt("ssb", new DummyIndexer(), numWorkers)
-	        .localOrShuffleGrouping("feed");
+        //builder.setBolt("ssb", new DummyIndexer(), numWorkers)
+	//        .localOrShuffleGrouping("parse");
+
+	builder.setBolt("indexer", new IndexerBolt(), numWorkers)
+	    .localOrShuffleGrouping("parse");
 
         WARCHdfsBolt warcbolt = getWarcBolt("CC-PATENTS");
 
-        // take it from feed default output so that the feed files themselves
-        // don't get included - unless we want them too of course!
-        builder.setBolt("warc", warcbolt).localOrShuffleGrouping("feed");
+        builder.setBolt("warc", warcbolt).localOrShuffleGrouping("parse");
 
         builder.setBolt("status", new StatusUpdaterBolt(), numWorkers)
                 .localOrShuffleGrouping("fetch",   Constants.StatusStreamName)
                 .localOrShuffleGrouping("sitemap", Constants.StatusStreamName)
-	        .localOrShuffleGrouping("feed",    Constants.StatusStreamName)
-	        .localOrShuffleGrouping("ssb",     Constants.StatusStreamName)
+	        .localOrShuffleGrouping("parse",   Constants.StatusStreamName)
+	        .localOrShuffleGrouping("indexer", Constants.StatusStreamName)
 	        .setNumTasks(numShards);
 
         return submit(conf, builder);
     }
+    
 
     protected WARCHdfsBolt getWarcBolt(String filePrefix) {
         // path is absolute

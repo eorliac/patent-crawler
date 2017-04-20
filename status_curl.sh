@@ -1,11 +1,65 @@
 #!/bin/sh
+echo "index: ALL"
+curl -XGET 'localhost:9200/index/_search?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "query_string": {
+            "query": "*"
+        }
+    }
+}
+'
+exit
 
-echo "\nURL DISCOVERED:"
+echo "status: ALL"
+curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "query_string": {
+            "query": "*"
+        }
+    }
+}
+'
+echo "status: DISCOVERED"
+curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {"status": "DISCOVERED"}
+        }
+       ]
+     }
+   }
+}
+'
+echo "status: FETCHED"
+curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {"status": "FETCHED"}
+        }
+       ]
+     }
+   }
+}
+'
+echo "done"
+exit
+
+
+
+echo "\nURL ALL:"
 curl -XGET 'localhost:9200/_count?pretty' -H 'Content-Type: application/json' -d'
 {
     "query": {
         "query_string": {
-            "query": "(status:DISCOVERED AND url:*merck*)"
+            "query": "*"
         }
     }
 }
@@ -15,12 +69,23 @@ curl -XGET 'localhost:9200/_search?pretty' -H 'Content-Type: application/json' -
 {
     "query": {
         "query_string": {
-            "query": "(status:FETCHED AND url:*merck*)"
+            "query": "status: FETCHED"
         }
     }
 }
 '
-echo "\nURL FETCHED:"
+echo "\nURL FETCHED count all:"
+curl -XGET 'localhost:9200/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "query_string": {
+            "query": "(status:FETCHED)"
+        }
+    }
+}
+'
+
+echo "\nURL FETCHED count *merck*:"
 curl -XGET 'localhost:9200/_count?pretty' -H 'Content-Type: application/json' -d'
 {
     "query": {
@@ -30,8 +95,17 @@ curl -XGET 'localhost:9200/_count?pretty' -H 'Content-Type: application/json' -d
     }
 }
 '
-echo "done"
-exit
+echo "\nURL FETCHED count *tivo*:"
+curl -XGET 'localhost:9200/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+    "query": {
+        "query_string": {
+            "query": "(status:FETCHED AND url:*tivo*)"
+        }
+    }
+}
+'
+
 
 
 echo "\nURL FETCHED"

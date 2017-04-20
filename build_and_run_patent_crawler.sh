@@ -20,7 +20,7 @@ echo ""
 echo "\n\nLAUNCHING INJECTION TOPOLOGY"
 storm jar target/patent-crawler-1.0.jar com.digitalpebble.stormcrawler.elasticsearch.ESSeedInjector ~/patent-crawler/seeds/ patent-seeds.txt -conf conf/es-conf.yaml -conf conf/crawler-conf.yaml -local &
 
-sleep 45
+sleep 60
 
 echo "\nKILLING INJECTION TOPOLOGY"
 ####storm kill  com.digitalpebble.stormcrawler.elasticsearch.ESSeedInjector

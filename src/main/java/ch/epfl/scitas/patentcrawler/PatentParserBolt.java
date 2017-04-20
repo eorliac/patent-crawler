@@ -331,24 +331,21 @@ public class PatentParserBolt extends StatusEmitterBolt {
         }
 
         if (emitOutlinks) {
-	    System.out.println("$$$$$ EmitOutlinks...");
+	    //System.out.println("$$$$$ EmitOutlinks...");
             for (Outlink outlink : parse.getOutlinks()) {
-		System.out.println("$$$$$ ------- outlink: " + outlink);
+		//System.out.println("$$$$$ ------- outlink: " + outlink);
                 collector.emit(
                         StatusStreamName,
                         tuple,
                         new Values(outlink.getTargetURL(), outlink
                                 .getMetadata(), Status.DISCOVERED));
             }
-	    System.out.println("$$$$$ EmitOutlinks...complete");
+	    //System.out.println("$$$$$ EmitOutlinks...complete");
         } else {
-	    System.out.println("$$$$$ NO Outlinks!");
+	    //System.out.println("$$$$$ NO Outlinks!");
 	}
 
-	
-	System.out.println("$$-$$ NOW Parsing documents!");
-	
-
+	LOG.info("Parsing ========================================================= url: {}", url);
 	
         // emit each document/subdocument in the ParseResult object
         // there should be at least one ParseData item for the "parent" URL
@@ -356,24 +353,27 @@ public class PatentParserBolt extends StatusEmitterBolt {
         for (Map.Entry<String, ParseData> doc : parse) {
             ParseData parseDoc = doc.getValue();
 
-	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat(\\.|atent)");
+	    //System.out.println("TEXT TO GREP:\n" + parseDoc.getText() + "\n");
+
+	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat[(\\.)|(ent)]");
 	    Matcher matcher = pattern.matcher(parseDoc.getText());
 	    
 	    if (matcher.find()) {
-		System.out.println("===========================================================================");
+		System.out.println("===========================================================================\n");
 		System.out.println("Found U.S.Patent mention in:\n " + parseDoc.getText());
 		String val = matcher.group();
 		System.out.println("MATCH: " + val);
 		System.out.println("Will WARC page content. Metadata is:\n" + parseDoc.getMetadata());
-		System.out.println("===========================================================================");
+		System.out.println("===========================================================================\n");
 		    
 		collector.emit(tuple,
 			       new Values(doc.getKey(), parseDoc.getContent(), parseDoc
 					  .getMetadata(), parseDoc.getText()));
 	    }
 	}
+	LOG.info("Parsing finished ================================================ url: {}", url);
 
-	// EO: Indicate URL as PARSED
+	// EO: Indicate URL as FETCHED
 	
 	collector.emit(com.digitalpebble.stormcrawler.Constants.StatusStreamName,
 		       tuple,

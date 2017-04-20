@@ -1,7 +1,9 @@
-#https://www.tivo.com/legal/patents
 http://www.merck.com/product/patent/home.html
+http://www.novonordisk-us.com/patients/products/product-patents.html
+https://www.tivo.com/legal/patents
+
+#https://en.wikipedia.org/wiki/List_of_top_United_States_patent_recipients
 #https://www.uspto.gov/
 #https://www.shire.com/
-
 
 # disallowed by robots

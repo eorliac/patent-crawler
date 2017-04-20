@@ -1,11 +1,13 @@
 # configuration for Elasticsearch resources
   
 config:
+
   # ES indexer bolt
   es.indexer.addresses: "localhost:9300"
   es.indexer.index.name: "index"
   es.indexer.doc.type: "doc"
-  es.indexer.create: false
+  es.indexer.text.fieldname: "content"
+  #es.indexer.create: false
   es.indexer.settings:
     cluster.name: "ES_Cluster"
 
