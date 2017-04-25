@@ -29,7 +29,6 @@ import org.apache.storm.tuple.Fields;
 import ch.epfl.scitas.patentcrawler.FileTimeSizeRotationPolicy.Units;
 import ch.epfl.scitas.patentcrawler.StatusUpdaterBolt;
     
-import com.digitalpebble.stormcrawler.bolt.FeedParserBolt;
 import com.digitalpebble.stormcrawler.bolt.FetcherBolt;
 /**import com.digitalpebble.stormcrawler.bolt.URLPartitionerBolt;**/
 /**import com.digitalpebble.stormcrawler.elasticsearch.persistence.AggregationSpout;**/
@@ -37,6 +36,8 @@ import com.digitalpebble.stormcrawler.bolt.FetcherBolt;
 //import com.digitalpebble.stormcrawler.indexing.DummyIndexer;
 //import com.digitalpebble.stormcrawler.elasticsearch.bolt.IndexerBolt;
 import ch.epfl.scitas.patentcrawler.IndexerBolt;
+import ch.epfl.scitas.patentcrawler.tika.RedirectionBolt;
+import ch.epfl.scitas.patentcrawler.tika.ParserBolt;
 
 import com.digitalpebble.stormcrawler.protocol.AbstractHttpProtocol;
 import com.digitalpebble.stormcrawler.util.ConfUtils;
@@ -74,26 +75,30 @@ public class CrawlTopology extends ConfigurableTopology {
         builder.setBolt("sitemap", new PatentSiteMapParserBolt(), numWorkers)
                 .setNumTasks(2).localOrShuffleGrouping("fetch");
 
-        builder.setBolt("parse", new PatentParserBolt(), numWorkers).setNumTasks(4)
+        builder.setBolt("parse", new PatentParserBolt(), numWorkers).setNumTasks(40) // eo: set to 40 instead of 4
                 .localOrShuffleGrouping("sitemap");
 
-        // don't need to parse the pages but need to update their status
-	// EO: DummyIndexer update status as "FETCHED" for tuples that went through
-	//     all the previous bolts.
-        //builder.setBolt("ssb", new DummyIndexer(), numWorkers)
-	//        .localOrShuffleGrouping("parse");
-
-	builder.setBolt("indexer", new IndexerBolt(), numWorkers)
+	builder.setBolt("shunt", new RedirectionBolt())
 	    .localOrShuffleGrouping("parse");
+  
+	builder.setBolt("tika", new ParserBolt())
+	    .localOrShuffleGrouping("shunt","tika");
+	
+	builder.setBolt("indexer", new IndexerBolt(), numWorkers)
+	    .localOrShuffleGrouping("parse")
+	    .localOrShuffleGrouping("tika");
 
         WARCHdfsBolt warcbolt = getWarcBolt("CC-PATENTS");
-
-        builder.setBolt("warc", warcbolt).localOrShuffleGrouping("parse");
+	
+        builder.setBolt("warc", warcbolt)
+	    .localOrShuffleGrouping("parse")
+	    .localOrShuffleGrouping("tika");
 
         builder.setBolt("status", new StatusUpdaterBolt(), numWorkers)
                 .localOrShuffleGrouping("fetch",   Constants.StatusStreamName)
                 .localOrShuffleGrouping("sitemap", Constants.StatusStreamName)
 	        .localOrShuffleGrouping("parse",   Constants.StatusStreamName)
+	        .localOrShuffleGrouping("tika",    Constants.StatusStreamName)
 	        .localOrShuffleGrouping("indexer", Constants.StatusStreamName)
 	        .setNumTasks(numShards);
 

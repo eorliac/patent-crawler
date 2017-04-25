@@ -11,6 +11,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<storm-crawler.version>1.4</storm-crawler.version>
 		<storm-core.version>1.0.3</storm-core.version>
+		<tika-parsers.version>1.13</tika-parsers.version>
 	</properties>
 
 	<build>
@@ -120,6 +121,17 @@
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>2.6.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.tika</groupId>
+			<artifactId>tika-parsers</artifactId>
+			<version>${tika-parsers.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>asm</artifactId>
+					<groupId>asm</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 	</dependencies>
 

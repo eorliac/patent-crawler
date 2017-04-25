@@ -18,6 +18,8 @@ config:
   
   partition.url.mode: "byHost"
 
+  jsoup.treat.non.html.as.error: false
+
   http.content.limit: 1048576
   
   http.store.headers: true

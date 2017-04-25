@@ -1,4 +1,17 @@
 #!/bin/sh
+
+echo "status: ALL"
+curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
+{
+        "query": {
+        "query_string": {
+            "query": "*"
+        }
+    }
+}
+'
+exit
+
 echo "index: ALL"
 curl -XGET 'localhost:9200/index/_search?pretty' -H 'Content-Type: application/json' -d'
 {
@@ -11,16 +24,6 @@ curl -XGET 'localhost:9200/index/_search?pretty' -H 'Content-Type: application/j
 '
 exit
 
-echo "status: ALL"
-curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
-{
-    "query": {
-        "query_string": {
-            "query": "*"
-        }
-    }
-}
-'
 echo "status: DISCOVERED"
 curl -XGET 'localhost:9200/status/_count?pretty' -H 'Content-Type: application/json' -d'
 {
