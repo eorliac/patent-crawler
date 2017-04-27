@@ -5,18 +5,17 @@
 # E. Orliac, SCITAS, EPFL
 # 12/04/2017
 #
-# Build crawler, recreate ES indices, launch seed injection topology, kill it
-# then start the patent-crawler
+# Launch seed injection topology, kill it then start the patent-crawler
 # ---------------------------------------------------------------------------
 
-echo "EXE: mvn clean package"
-echo ""
-#mvn clean package
+###echo "EXE: mvn clean package"
+###echo ""
+###mvn clean package
 
-echo "CREATE INDICES"
-echo ""
-./conf/ES_create_indices.sh
-echo "\n\n"
+###echo "CREATE INDICES"
+###echo ""
+###./conf/ES_create_indices.sh
+###echo "\n\n"
 
 echo "\n\nLAUNCHING INJECTION TOPOLOGY"
 storm jar target/patent-crawler-1.0.jar com.digitalpebble.stormcrawler.elasticsearch.ESSeedInjector ~/patent-crawler/seeds/ patent-seeds.txt -conf conf/es-conf.yaml -conf conf/crawler-conf.yaml -local &
