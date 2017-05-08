@@ -12,7 +12,9 @@ config:
   topology.debug: false
   topology.name: "PatentCrawl"
   topology.backpressure.enable: false
-  
+
+  parser.emitOutlinks: false
+
   # set to 0 to deactivate debugging
   topology.eventlogger.executors: 0
   

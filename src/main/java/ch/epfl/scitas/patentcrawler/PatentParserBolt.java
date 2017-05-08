@@ -30,8 +30,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+//import java.util.regex.Pattern;
+//import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.entity.ContentType;
@@ -69,6 +69,8 @@ import com.digitalpebble.stormcrawler.bolt.StatusEmitterBolt;
 
 import com.ibm.icu.text.CharsetDetector;
 import com.ibm.icu.text.CharsetMatch;
+
+import ch.epfl.scitas.patentcrawler.PatentRegexDetector;
 
 /**
  * Parser for HTML documents only which uses ICU4J to detect the charset
@@ -346,6 +348,8 @@ public class PatentParserBolt extends StatusEmitterBolt {
 	}
 
 	LOG.info("Parsing ========================================================= url: {}", url);
+
+	PatentRegexDetector patentDetector = new PatentRegexDetector();
 	
         // emit each document/subdocument in the ParseResult object
         // there should be at least one ParseData item for the "parent" URL
@@ -355,6 +359,14 @@ public class PatentParserBolt extends StatusEmitterBolt {
 
 	    //System.out.println("TEXT TO GREP:\n" + parseDoc.getText() + "\n");
 
+	    if (patentDetector.detectPatentMentionIn(parseDoc.getText())) {
+		System.out.println(" ***  PatentRegexDetector POSITIVE on url: " + url);
+		collector.emit(tuple,
+			       new Values(doc.getKey(), parseDoc.getContent(), parseDoc
+					  .getMetadata(), parseDoc.getText()));
+	    }
+
+	    /**
 	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat[(\\.)|(ent)]");
 	    Matcher matcher = pattern.matcher(parseDoc.getText());
 	    
@@ -370,6 +382,7 @@ public class PatentParserBolt extends StatusEmitterBolt {
 			       new Values(doc.getKey(), parseDoc.getContent(), parseDoc
 					  .getMetadata(), parseDoc.getText()));
 	    }
+	    **/
 	}
 	LOG.info("Parsing finished ================================================ url: {}", url);
 

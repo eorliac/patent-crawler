@@ -9,13 +9,18 @@
 # then start the patent-crawler
 # ---------------------------------------------------------------------------
 
+# Set working directory to project home directory
+cd "$(dirname "$0")/.."
+pwd
+
 echo "EXE: mvn clean package"
 echo ""
 #mvn clean package
 
 echo "CREATE INDICES"
 echo ""
-./conf/ES_create_indices.sh
+pwd
+./bin/ES_create_indices.sh
 echo "\n\n"
 
 echo "\n\nLAUNCHING INJECTION TOPOLOGY"

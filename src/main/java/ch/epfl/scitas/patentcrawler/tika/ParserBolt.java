@@ -29,8 +29,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+//import java.util.regex.Pattern;
+//import java.util.regex.Matcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
@@ -70,6 +70,8 @@ import org.apache.storm.topology.base.BaseRichBolt;
 import org.apache.storm.tuple.Fields;
 import org.apache.storm.tuple.Tuple;
 import org.apache.storm.tuple.Values;
+
+import ch.epfl.scitas.patentcrawler.PatentRegexDetector;
 
 /**
  * Uses Tika to parse the output of a fetch and extract text + metadata
@@ -297,9 +299,19 @@ public class ParserBolt extends BaseRichBolt {
 
 	LOG.info("Tika Parsing ========================================================= url: {}", url);
 
+	PatentRegexDetector patentDetector = new PatentRegexDetector();
+
         for (Map.Entry<String, ParseData> doc : parse) {
             ParseData parseDoc = doc.getValue();
+	    
+	    if (patentDetector.detectPatentMentionIn(parseDoc.getText())) {
+		System.out.println(" ***  PatentRegexDetector POSITIVE on url: " + url);
+		collector.emit(tuple,
+			       new Values(doc.getKey(), parseDoc.getContent(), parseDoc
+					  .getMetadata(), parseDoc.getText()));
+	    }
 
+	    /**
 	    Pattern pattern = Pattern.compile("(?i)U\\.*\\s*S\\.*\\s*Pat[(\\.)|(ent)]");
 	    Matcher matcher = pattern.matcher(parseDoc.getText());
 	    
@@ -316,6 +328,7 @@ public class ParserBolt extends BaseRichBolt {
 			       new Values(doc.getKey(), parseDoc.getContent(),
 					  parseDoc.getMetadata(), parseDoc.getText()));
 	    }
+	    **/
 	}
 	
 	LOG.info("Tika Parsing finished ================================================ url: {}", url);
